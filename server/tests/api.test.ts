@@ -16,19 +16,21 @@ const makeToken = (userId: string, role = 'USER') =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
 
 describe('Lost2Found API', () => {
-  let mongoServer: MongoMemoryServer;
+  let mongoServer: MongoMemoryServer | undefined;
   let token: string;
   let adminToken: string;
   let userId: string;
   let adminId: string;
 
   beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
-    process.env.MONGODB_URI = mongoServer.getUri();
-    process.env.JWT_SECRET = 'test_jwt_secret';
+    process.env.JWT_SECRET = process.env.JWT_SECRET || 'test_jwt_secret';
     process.env.NODE_ENV = 'test';
+    if (!process.env.MONGODB_URI) {
+      mongoServer = await MongoMemoryServer.create();
+      process.env.MONGODB_URI = mongoServer.getUri();
+    }
     await mongoose.connect(process.env.MONGODB_URI);
-  });
+  }, 60000);
 
   beforeEach(async () => {
     await User.deleteMany({});
@@ -58,8 +60,10 @@ describe('Lost2Found API', () => {
 
   afterAll(async () => {
     await mongoose.disconnect();
-    await mongoServer.stop();
-  });
+    if (mongoServer) {
+      await mongoServer.stop();
+    }
+  }, 60000);
 
   // ──────────────────────────────────────────────────────────
   // HEALTH CHECK

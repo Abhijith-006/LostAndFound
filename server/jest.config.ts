@@ -3,4 +3,5 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/*.test.ts'],
   clearMocks: true,
+  testTimeout: 60000,
 };
