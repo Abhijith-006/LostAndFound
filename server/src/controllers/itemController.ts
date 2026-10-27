@@ -46,8 +46,12 @@ export const createItem = async (req: AuthRequest, res: Response) => {
         const potentialMatches = await matchingEngine.findMatchesForItem(String(item._id));
         for (const match of potentialMatches) {
           if (match.score >= 40 && match.lostItem.reporter) {
+            const reporterId = (match.lostItem.reporter as any)?._id
+              ? String((match.lostItem.reporter as any)._id)
+              : String(match.lostItem.reporter);
+
             await notificationService.notifyPossibleMatch(
-              String(match.lostItem.reporter),
+              reporterId,
               match.lostItem,
               item,
               match.score

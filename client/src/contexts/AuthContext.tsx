@@ -23,8 +23,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const userInfo = localStorage.getItem('userInfo');
     if (userInfo) {
-      setUser(JSON.parse(userInfo));
+      try {
+        setUser(JSON.parse(userInfo));
+      } catch {
+        localStorage.removeItem('userInfo');
+      }
     }
+
+    const handleAuthLogout = () => {
+      setUser(null);
+    };
+
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
   }, []);
 
   const login = (userData: User) => {
@@ -35,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('userInfo');
+    window.dispatchEvent(new Event('auth:logout'));
     window.location.href = '/';
   };
 

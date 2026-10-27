@@ -5,8 +5,10 @@ import { User } from '../models/User';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { AuthRequest } from '../middleware/authMiddleware';
 
+import { getJwtSecret } from '../config/jwt';
+
 const generateToken = (id: string) => {
-  const secret = process.env.JWT_SECRET || 'secret';
+  const secret = getJwtSecret();
   const expiresIn = (process.env.JWT_EXPIRES_IN || '30d') as SignOptions['expiresIn'];
 
   return jwt.sign({ id }, secret, {
@@ -23,9 +25,15 @@ export const registerUser = async (req: Request, res: Response) => {
 
     let normalizedRole: 'STUDENT' | 'OFFICE_STAFF' | 'ADMIN' = 'STUDENT';
     if (role === 'ADMIN' || role === 'OFFICE_STAFF') {
-      const isTestOrDev = process.env.NODE_ENV === 'test' || process.env.NODE_ENV !== 'production';
-      const validCode = process.env.ADMIN_INVITE_CODE || 'campus-office-2025';
-      if (isTestOrDev || adminCode === validCode) {
+      const isTest = process.env.NODE_ENV === 'test';
+      const validCode = process.env.ADMIN_INVITE_CODE || (isTest ? 'campus-office-2025' : '');
+
+      if (!validCode) {
+        res.status(500).json({ message: 'Administrative registration is temporarily unconfigured' });
+        return;
+      }
+
+      if (adminCode === validCode) {
         normalizedRole = role;
       } else {
         res.status(403).json({ message: 'Invalid administrative verification code' });

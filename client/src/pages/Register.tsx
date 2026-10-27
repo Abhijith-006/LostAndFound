@@ -8,6 +8,7 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'STUDENT' | 'ADMIN'>('STUDENT');
+  const [adminCode, setAdminCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -18,7 +19,16 @@ const Register = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.post('/auth/register', { name, email, password, role });
+      const payload: { name: string; email: string; password: string; role: 'STUDENT' | 'ADMIN'; adminCode?: string } = {
+        name,
+        email,
+        password,
+        role,
+      };
+      if (role === 'ADMIN' && adminCode) {
+        payload.adminCode = adminCode;
+      }
+      const { data } = await api.post('/auth/register', payload);
       login(data);
       navigate(data.role === 'ADMIN' ? '/office' : '/');
     } catch (err: any) {
@@ -94,6 +104,20 @@ const Register = () => {
                 🏢 Office Staff
               </button>
             </div>
+            {role === 'ADMIN' && (
+              <div className="mt-2.5">
+                <label className="block text-xs font-semibold text-purple-700 mb-1">
+                  Staff Verification Code (Campus Office)
+                </label>
+                <input
+                  type="password"
+                  value={adminCode}
+                  onChange={(e) => setAdminCode(e.target.value)}
+                  placeholder="campus-office-2025"
+                  className="w-full px-4 py-2 rounded-xl border border-purple-200 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 bg-purple-50/30"
+                />
+              </div>
+            )}
           </div>
 
           <div>

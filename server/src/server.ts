@@ -1,7 +1,16 @@
+import crypto from 'crypto';
+
+if (!globalThis.crypto) {
+  (globalThis as any).crypto = crypto.webcrypto;
+}
+
 import app from './app';
 import { connectDB } from './config/db';
 
 const PORT = process.env.PORT || 5000;
+
+import { getJwtSecret } from './config/jwt';
+getJwtSecret();
 
 connectDB().then(() => {
   app.listen(PORT, () => {

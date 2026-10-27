@@ -1,5 +1,12 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
+
+// Polyfill WebCrypto for runtimes where globalThis.crypto is not exposed globally
+if (!globalThis.crypto) {
+  (globalThis as any).crypto = crypto.webcrypto;
+}
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

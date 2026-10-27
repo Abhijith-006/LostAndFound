@@ -6,13 +6,20 @@ export interface AuthRequest extends Request {
   user?: IUser;
 }
 
+import { getJwtSecret } from '../config/jwt';
+
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   let token: string | undefined;
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+      if (!token) {
+        res.status(401).json({ message: 'Not authorized, token missing' });
+        return;
+      }
+      const jwtSecret = getJwtSecret();
+      const decoded = jwt.verify(token, jwtSecret) as any;
 
       const user = await User.findById(decoded.id).select('-passwordHash');
       if (!user) {
@@ -22,8 +29,10 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
       req.user = user;
       next();
       return;
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn(`JWT verification failed: ${error?.message || error}`);
+      }
       res.status(401).json({ message: 'Not authorized, token failed' });
       return;
     }

@@ -52,8 +52,11 @@ const NotificationPanel = () => {
       const { data } = await api.get('/notifications');
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
-    } catch {
-      // silently fail
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
     } finally {
       setLoading(false);
     }
@@ -61,10 +64,29 @@ const NotificationPanel = () => {
 
   useEffect(() => {
     const userInfo = localStorage.getItem('userInfo');
-    if (!userInfo) return;
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // poll every 30s
-    return () => clearInterval(interval);
+    if (userInfo) {
+      fetchNotifications();
+    }
+
+    const interval = setInterval(() => {
+      const currentAuth = localStorage.getItem('userInfo');
+      if (currentAuth) {
+        fetchNotifications();
+      }
+    }, 30000); // poll every 30s only when authenticated
+
+    const handleAuthLogout = () => {
+      setNotifications([]);
+      setUnreadCount(0);
+      setOpen(false);
+    };
+
+    window.addEventListener('auth:logout', handleAuthLogout);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('auth:logout', handleAuthLogout);
+    };
   }, [fetchNotifications]);
 
   // Close panel on outside click

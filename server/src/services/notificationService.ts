@@ -55,8 +55,14 @@ export class NotificationService {
     foundItem: IItem,
     score: number
   ): Promise<void> {
+    const userId = (lostItemReporterId as any)?._id
+      ? String((lostItemReporterId as any)._id)
+      : (lostItem.reporter as any)?._id
+      ? String((lostItem.reporter as any)._id)
+      : String(lostItemReporterId);
+
     await this.createNotification({
-      userId: lostItemReporterId,
+      userId,
       type: 'POSSIBLE_MATCH',
       title: `Possible Match Found (${score}%)`,
       message: `A found item "${foundItem.title}" resembles your reported lost item "${lostItem.title}".`,
@@ -70,8 +76,14 @@ export class NotificationService {
     storageLocation?: string
   ): Promise<void> {
     const locationInfo = storageLocation ? ` at location: ${storageLocation}` : '';
+    const userId = (reporterId as any)?._id
+      ? String((reporterId as any)._id)
+      : (item.reporter as any)?._id
+      ? String((item.reporter as any)._id)
+      : String(reporterId);
+
     await this.createNotification({
-      userId: reporterId,
+      userId,
       type: 'ITEM_RECEIVED',
       title: 'Item Received at Office',
       message: `The physical item "${item.title}" has been verified and stored in the campus Lost & Found office${locationInfo}.`,

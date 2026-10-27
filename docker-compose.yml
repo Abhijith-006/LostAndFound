@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   # ── MongoDB ──────────────────────────────────────────
   mongo:
@@ -26,7 +24,7 @@ services:
       NODE_ENV: production
       PORT: 5000
       MONGODB_URI: mongodb://mongo:27017/lost2found
-      JWT_SECRET: ${JWT_SECRET:-changeme_in_production}
+      JWT_SECRET: '${JWT_SECRET:?JWT_SECRET environment variable is required}'
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
